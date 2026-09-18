@@ -5,10 +5,19 @@
 # personal project, minimums are the right trade: if a future release ever
 # breaks something, change the >= to == on that one line to freeze it.
 
-# >=1.50 specifically: the app uses width='stretch' on charts and buttons,
-# which replaced the older use_container_width=True. Older Streamlit versions
-# don't accept it, so this floor is a hard requirement verified by testing.
-streamlit>=1.50
+# Streamlit is PINNED rather than given a floor, which is the one exception to
+# the note above.
+#
+# Streamlit Cloud serves its JavaScript in content-hashed chunks that the page
+# loads lazily, so a chart or table only pulls its code when it is first drawn.
+# Those filenames change with every Streamlit release. Left as ">=", a rebuild
+# could quietly install a newer Streamlit, and any browser still holding the
+# previous page would ask for chunk names that no longer exist and show
+# "Failed to fetch dynamically imported module" where a chart should be.
+#
+# Pinning makes a rebuild of unchanged code produce byte-identical assets.
+# Upgrade deliberately by raising this number and testing.
+streamlit==1.64.0
 pandas>=2.2
 requests>=2.32
 

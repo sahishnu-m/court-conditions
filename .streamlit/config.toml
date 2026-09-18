@@ -1,5 +1,4 @@
 # Look and feel of the Streamlit app.
-# Matched to the Tennis Match Predictor so both projects share one identity.
 [theme]
 base = "light"
 primaryColor = "#2a78d6"
@@ -9,10 +8,25 @@ textColor = "#0b0b0b"
 borderColor = "#e6e5e0"
 baseRadius = "8px"
 showWidgetBorder = true
-# Serif headings, sans-serif body.
-# ("serif" and "sans-serif" are fonts built into Streamlit: Source Serif / Source Sans.)
-headingFont = "serif"
-font = "sans-serif"
+
+# Typography: a plain neutral grotesque, headings and body alike.
+#
+# Streamlit's built-in "sans-serif" alias resolves to Source Sans, a humanist
+# face with soft, rounded letterforms. It reads as friendly, which is the wrong
+# register for a page full of numbers, so both fonts are set explicitly here.
+#
+# These are font STACKS rather than a single name, and the order matters. The
+# browser walks the list and uses the first one installed: Helvetica Neue on
+# macOS, Arial on Windows, then Liberation Sans or Nimbus Sans on Linux, which
+# is what Streamlit Community Cloud runs. Every entry is metrically compatible
+# with the others, so the layout holds whichever one a visitor ends up with.
+#
+# Nothing is downloaded from a font CDN. That keeps the page fast, removes a
+# third-party request, and means the app still renders correctly offline.
+font = "Helvetica Neue, Helvetica, Arial, Liberation Sans, Nimbus Sans, sans-serif"
+headingFont = "Helvetica Neue, Helvetica, Arial, Liberation Sans, Nimbus Sans, sans-serif"
+codeFont = "SFMono-Regular, Menlo, Consolas, Liberation Mono, monospace"
+
 chartCategoricalColors = ["#2a78d6", "#eb6834", "#1baf7a"]
 
 [browser]
