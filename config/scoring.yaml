@@ -145,13 +145,13 @@ playability:
   # SCORE LABELS
   # --------------------------------------------------------------------------
   # What a number means in words. `min_score` is inclusive, checked top down.
-  # Colours are chosen to stay legible on a dark background.
+  # Colours are chosen to stay legible on the app's cream background.
   labels:
-    - {min_score: 80, label: "Good",      color: "#3fb950"}
-    - {min_score: 60, label: "Playable",  color: "#57ab5a"}
-    - {min_score: 40, label: "Marginal",  color: "#d29922"}
-    - {min_score: 20, label: "Poor",      color: "#db6d28"}
-    - {min_score: 0,  label: "Unplayable", color: "#f85149"}
+    - {min_score: 80, label: "Good",       color: "#1baf7a"}
+    - {min_score: 60, label: "Playable",   color: "#6aa84f"}
+    - {min_score: 40, label: "Marginal",   color: "#e0a030"}
+    - {min_score: 20, label: "Poor",       color: "#eb6834"}
+    - {min_score: 0,  label: "Unplayable", color: "#c0392b"}
 
   # The cutoff used when counting "playable hours" in the historical view.
   # 50 means "Playable or better". Raise it to 60 if you only want to count

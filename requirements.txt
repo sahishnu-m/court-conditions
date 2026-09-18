@@ -10,8 +10,12 @@
 # don't accept it, so this floor is a hard requirement verified by testing.
 streamlit>=1.50
 pandas>=2.2
-plotly>=5.24
 requests>=2.32
+
+# Altair draws every chart. Streamlit renders Altair natively and applies the
+# theme from .streamlit/config.toml to it, so the charts pick up the same
+# palette and fonts as the rest of the page without being styled separately.
+altair>=5.4
 
 # requests-cache transparently stores API responses in a local SQLite file so
 # repeated runs don't re-hit Open-Meteo. See court_conditions/cache.py.
