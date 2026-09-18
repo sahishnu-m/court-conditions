@@ -291,7 +291,7 @@ col_c.metric(
 )
 
 st.markdown(
-    f'<div class="note">Crowding: {crowd.label}. {crowd.reason}.</div>',
+    f'<div class="note">Crowding: {crowd.label} &mdash; {crowd.reason}.</div>',
     unsafe_allow_html=True,
 )
 

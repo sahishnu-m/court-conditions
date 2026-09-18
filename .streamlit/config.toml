@@ -1,0 +1,25 @@
+# Streamlit theme.
+#
+# This file pins the app to a dark theme. It matters: the custom CSS in app.py
+# sets light text colours (#e6edf3) and hairline borders chosen against a dark
+# background. Left to the viewer's own setting, anyone whose Streamlit defaults
+# to light mode would get pale grey text on white and be unable to read it.
+#
+# Pinning the theme here makes the app look the same on your phone, on a
+# laptop, and on Streamlit Community Cloud.
+
+[theme]
+base = "dark"
+backgroundColor = "#0d1117"          # GitHub dark canvas
+secondaryBackgroundColor = "#161b22"  # sidebar and expander surfaces
+textColor = "#e6edf3"
+primaryColor = "#3fb950"              # accent: buttons, focus rings, links
+font = "sans serif"
+
+[server]
+# Keeps the browser from opening automatically when run on a server.
+headless = true
+
+[browser]
+# No usage statistics are gathered from this app.
+gatherUsageStats = false
