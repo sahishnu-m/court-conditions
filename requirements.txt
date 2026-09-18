@@ -1,0 +1,25 @@
+# Pinned to minimum versions rather than exact ones (>= not ==).
+#
+# Exact pins would guarantee Streamlit Community Cloud installs precisely what
+# was tested, but they also go stale and start failing to resolve. For a small
+# personal project, minimums are the right trade: if a future release ever
+# breaks something, change the >= to == on that one line to freeze it.
+
+# >=1.50 specifically: the app uses width='stretch' on charts and buttons,
+# which replaced the older use_container_width=True. Older Streamlit versions
+# don't accept it, so this floor is a hard requirement verified by testing.
+streamlit>=1.50
+pandas>=2.2
+plotly>=5.24
+requests>=2.32
+
+# requests-cache transparently stores API responses in a local SQLite file so
+# repeated runs don't re-hit Open-Meteo. See court_conditions/cache.py.
+requests-cache>=1.2
+
+# astral computes sunrise/sunset from latitude and longitude locally.
+# No API call, no key, works offline — it's pure astronomy.
+astral>=3.2
+
+# PyYAML reads config/courts.yaml and config/scoring.yaml.
+PyYAML>=6.0

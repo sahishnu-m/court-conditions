@@ -1,0 +1,284 @@
+# ============================================================================
+# courts.yaml — the list of courts the app knows about.
+#
+# THIS FILE IS MEANT TO BE EDITED BY YOU. Nothing in the code hard-codes a
+# court; the app reads this file at startup, so correcting a detail here is
+# the whole edit. No Python changes needed.
+#
+# WHERE THESE NUMBERS CAME FROM, AND HOW MUCH TO TRUST THEM
+#
+#   Coordinates  — geocoded from OpenStreetMap. These should be good to within
+#                  a block or so. Most trustworthy field here.
+#   Court counts — from reno.gov's facility pages and renotennis.org's public
+#                  court guide. Probably right, but courts get resurfaced,
+#                  converted to pickleball, and closed all the time.
+#   Lights       — least reliable. "Has lights" and "the lights currently work
+#                  and are actually switched on in November" are very different
+#                  claims, and only the first one is written down anywhere.
+#   busy_hours   — entirely guesses. Nobody publishes this. It's a placeholder
+#                  for YOUR knowledge, which is the real data source here.
+#
+# That's why every court still says `verified: false`. It means "nobody has
+# stood on this court and checked". When you do, fix whatever's wrong and flip
+# the flag — the dashboard shows an "unverified" warning for anything still at
+# false, so you always know which numbers to trust.
+#
+# To fix coordinates: open Google Maps, right-click the courts themselves (not
+# the park entrance), and click the lat/long at the top of the menu.
+# ============================================================================
+
+meta:
+  # All times in this app are local Reno time. Open-Meteo is asked for data in
+  # this timezone directly, so we never have to do UTC math ourselves — that
+  # avoids a whole category of off-by-one-hour bugs.
+  timezone: America/Los_Angeles
+  region_name: Reno / Sparks, Nevada
+
+courts:
+  # --------------------------------------------------------------------------
+  # Each court has:
+  #   id           short unique key, used internally (no spaces)
+  #   name         what shows up in the dashboard
+  #   lat / lon    decimal degrees; drives the weather lookup
+  #   num_courts   how many playable tennis courts at this location
+  #   surface      hard | clay | other  (affects how long it stays wet)
+  #   lights       true/false — can you play here after dark?
+  #   lights_out   hour (24h) the lights shut off; ignored if lights: false
+  #   busy_hours   when the place is typically full (see note below)
+  #   verified     have YOU checked these details in person?
+  #
+  # busy_hours is a list of blocks. Each block is:
+  #   days   which weekdays it applies to (mon tue wed thu fri sat sun)
+  #   hours  "17-20" means 5pm up to but not including 8pm
+  #   level  0.0 to 1.0 — how full it gets. 1.0 means "every court taken".
+  #   why    a note to yourself so you remember where the number came from
+  #
+  # `level` is the number you should tune first. You coach here — your gut is
+  # better data than anything that could be scraped.
+  #
+  # Every surface below is set to `hard`. Northern Nevada public courts are
+  # essentially all asphalt or post-tension concrete, and the area has no
+  # public clay. The `clay` option exists in the scoring config to cover how
+  # differently clay behaves when wet, should you ever travel with this.
+  # --------------------------------------------------------------------------
+
+  - id: reno_tennis_center
+    name: Reno Municipal Tennis Center
+    city: Reno
+    lat: 39.4996
+    lon: -119.8133
+    num_courts: 10
+    surface: hard
+    lights: true
+    lights_out: 22
+    verified: false
+    notes: >
+      2601 Plumas St. The main tennis facility in the region — 10 courts,
+      open year round, roughly 6 of them lighted. IMPORTANT CAVEAT: courts
+      here can be reserved in advance through CourtReserve, and lessons and
+      league play are programmed by the operator. That means the crowding
+      estimate is least reliable at this court of anywhere in this file —
+      a court can be booked solid on a freezing Tuesday when this app
+      confidently tells you it'll be empty. Treat crowding here as a hint
+      only, and check the reservation system if it matters.
+    busy_hours:
+      - days: [mon, tue, wed, thu, fri]
+        hours: "17-21"
+        level: 0.9
+        why: "after-work league play and lessons; hardest time to get a court"
+      - days: [mon, tue, wed, thu, fri]
+        hours: "07-10"
+        level: 0.5
+        why: "morning regulars, heavier in summer to beat the heat"
+      - days: [sat, sun]
+        hours: "08-13"
+        level: 0.85
+        why: "weekend morning rush"
+
+  - id: barbara_bennett
+    name: Barbara Bennett Park
+    city: Reno
+    lat: 39.5234
+    lon: -119.8175
+    num_courts: 4
+    surface: hard
+    lights: false
+    lights_out: null
+    verified: false
+    notes: >
+      Downtown Reno near the river. Believed to have no lights, which makes
+      it a daylight-only court — check this, because it halves the usable
+      hours here from November through February.
+    busy_hours:
+      - days: [mon, tue, wed, thu, fri]
+        hours: "17-19"
+        level: 0.6
+        why: "after work, ends when the light does"
+      - days: [sat, sun]
+        hours: "10-14"
+        level: 0.7
+        why: "downtown park, busy on nice weekends"
+
+  - id: mira_loma
+    name: Mira Loma Park
+    city: Reno
+    lat: 39.4900
+    lon: -119.7465
+    num_courts: 4
+    surface: hard
+    lights: false
+    lights_out: null
+    verified: false
+    notes: >
+      Southeast Reno. The sports courts here were rebuilt recently, so the
+      surface should be in good shape. Lighting status unknown — set to false
+      as the conservative assumption, since wrongly assuming lights exist
+      would send you to a dark court.
+    busy_hours:
+      - days: [mon, tue, wed, thu, fri]
+        hours: "17-19"
+        level: 0.55
+        why: "after-work neighborhood play"
+      - days: [sat, sun]
+        hours: "09-13"
+        level: 0.6
+        why: "weekend mornings"
+
+  - id: cyan_park
+    name: Cyan Park
+    city: Reno
+    lat: 39.4450
+    lon: -119.7283
+    num_courts: 4
+    surface: hard
+    lights: false
+    lights_out: null
+    verified: false
+    notes: >
+      Far southeast Reno, out toward Damonte Ranch. Noticeably higher and
+      further from the river than the downtown courts, so its weather really
+      does differ — a good illustration of why every court gets its own
+      forecast pull instead of one shared "Reno" forecast.
+    busy_hours:
+      - days: [mon, tue, wed, thu, fri]
+        hours: "17-19"
+        level: 0.5
+        why: "after work"
+      - days: [sat, sun]
+        hours: "09-13"
+        level: 0.6
+        why: "weekend mornings, newer suburban neighborhood"
+
+  - id: manzanita
+    name: Manzanita Park
+    city: Reno
+    lat: 39.4832
+    lon: -119.8026
+    num_courts: 2
+    surface: hard
+    lights: false
+    lights_out: null
+    verified: false
+    notes: >
+      Southwest Reno, near UNR's south campus area. Only two courts, so it
+      goes from empty to full when one group shows up — crowding estimates
+      are inherently noisy anywhere with this few courts.
+    busy_hours:
+      - days: [mon, tue, wed, thu, fri]
+        hours: "16-19"
+        level: 0.65
+        why: "only 2 courts, so it fills fast after school and work"
+      - days: [sat, sun]
+        hours: "10-14"
+        level: 0.6
+        why: "weekend"
+
+  - id: burgess
+    name: Burgess Park
+    city: Sparks
+    lat: 39.5480
+    lon: -119.7535
+    num_courts: 3
+    surface: hard
+    lights: true
+    lights_out: 22
+    verified: false
+    notes: >
+      1605 Pyramid Way. Lighted, free, first-come first-served — no
+      reservation system to compete with, unlike the Reno Tennis Center.
+      Reportedly has a consistent group of local regulars.
+    busy_hours:
+      - days: [mon, tue, wed, thu, fri]
+        hours: "17-20"
+        level: 0.75
+        why: "after-work regulars; lights extend play past sunset"
+      - days: [sat, sun]
+        hours: "09-13"
+        level: 0.7
+        why: "weekend mornings"
+
+  - id: oppio
+    name: Oppio Park
+    city: Sparks
+    lat: 39.5530
+    lon: -119.7690
+    num_courts: 3
+    surface: hard
+    lights: true
+    lights_out: 22
+    verified: false
+    notes: "2355 18th St. Lighted, free, first-come first-served."
+    busy_hours:
+      - days: [mon, tue, wed, thu, fri]
+        hours: "17-20"
+        level: 0.65
+        why: "after work"
+      - days: [sat, sun]
+        hours: "09-13"
+        level: 0.65
+        why: "weekend mornings"
+
+  - id: shelly
+    name: Shelly Park
+    city: Sparks
+    lat: 39.5547
+    lon: -119.7339
+    num_courts: 2
+    surface: hard
+    lights: true
+    lights_out: 22
+    verified: false
+    notes: "2901 N Truckee Ln, north Sparks. Two lighted courts."
+    busy_hours:
+      - days: [mon, tue, wed, thu, fri]
+        hours: "17-20"
+        level: 0.6
+        why: "after work; only 2 courts so it fills quickly"
+      - days: [sat, sun]
+        hours: "10-14"
+        level: 0.6
+        why: "weekend"
+
+  - id: pah_rah
+    name: Pah Rah Mountain Park
+    city: Sparks
+    lat: 39.5648
+    lon: -119.7082
+    num_courts: 2
+    surface: hard
+    lights: false
+    lights_out: null
+    verified: false
+    notes: >
+      1750 Shadow Ln. The one Sparks tennis site reported as unlit, so it's
+      daylight-only. Sits higher up toward the Pah Rah range, which means it
+      is usually a little cooler and windier than the valley courts.
+    busy_hours:
+      - days: [mon, tue, wed, thu, fri]
+        hours: "17-19"
+        level: 0.45
+        why: "quieter park, after-work play limited by daylight"
+      - days: [sat, sun]
+        hours: "09-13"
+        level: 0.55
+        why: "weekend mornings"

@@ -1,0 +1,45 @@
+# --- Cached API responses and generated data ---------------------------------
+# These are DERIVED data: anyone who clones the repo regenerates them by
+# running the app. Committing them would bloat the repo with megabytes of
+# weather that goes stale immediately. The data/ folder is kept (via
+# .gitkeep) but its contents are not.
+data/*
+!data/.gitkeep
+
+# --- Python ------------------------------------------------------------------
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+dist/
+*.egg-info/
+.eggs/
+
+# --- Virtual environments ----------------------------------------------------
+.venv/
+venv/
+env/
+ENV/
+
+# --- Testing and tooling -----------------------------------------------------
+.pytest_cache/
+.coverage
+htmlcov/
+.mypy_cache/
+.ruff_cache/
+
+# --- Streamlit ---------------------------------------------------------------
+# secrets.toml can hold API keys. This project deliberately uses no keyed APIs,
+# so there should be nothing secret here — but the ignore stays in place so a
+# future key can never be committed by accident.
+.streamlit/secrets.toml
+
+# --- Editors and OS ----------------------------------------------------------
+.vscode/
+.idea/
+*.swp
+.DS_Store
+Thumbs.db
+desktop.ini

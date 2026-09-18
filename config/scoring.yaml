@@ -1,0 +1,242 @@
+# ============================================================================
+# scoring.yaml — every tunable number in the model lives here.
+#
+# DESIGN CHOICE: this project deliberately does NOT use machine learning.
+#
+# Why? A trained model would need labeled data — thousands of hours tagged
+# "I could play" / "I couldn't" — and that data has never been collected.
+# Worse, a neural net reporting "score 43" leaves you with no way to explain
+# the number, and no way to correct it when it turns out to be wrong about,
+# say, how fast a Reno hard court dries.
+#
+# So this is a RULE-BASED SCORING MODEL. Every point added or subtracted
+# comes from a named rule with a number you can see and change in this file.
+# When the app says "62 — wet from rain 3h ago, and windy", you can trace each
+# of those words to a line below. You know these courts better than any
+# dataset does, so the model is built to absorb your judgement.
+#
+# UNITS: Fahrenheit, miles per hour, inches. The weather API is asked for
+# these units directly so that what you read here matches what you'd read on
+# a phone weather app. No conversion math anywhere in the code.
+# ============================================================================
+
+playability:
+  # Every hour starts at 100 points and rules subtract from it.
+  # The final score is clamped to the 0-100 range.
+  starting_score: 100
+
+  # A "veto" rule doesn't subtract points — it forces the score straight to 0.
+  # Vetoes are for physical impossibility (it's dark, it's raining right now,
+  # the court is iced over), not for "unpleasant". Unpleasant is a penalty.
+
+  # --------------------------------------------------------------------------
+  # RULE 1: WET COURTS
+  # --------------------------------------------------------------------------
+  # The single biggest thing this app is for. A hard court is unplayable while
+  # wet and stays unplayable for a while after the rain stops. So we can't just
+  # ask "is it raining now" — we have to look BACKWARD in time.
+  #
+  # How the math works:
+  #   For each hour in the lookback window, we take that hour's rainfall and
+  #   multiply it by `penalty_per_inch`, then shrink it by `drying_rate` raised
+  #   to the power of how many hours ago it was. Older rain matters less,
+  #   because the court has had time to dry.
+  #
+  #   penalty = inches * penalty_per_inch * (drying_rate ^ hours_ago)
+  #
+  # Worked example with the defaults below:
+  #   0.10 inches of rain 2 hours ago
+  #   = 0.10 * 1200 * (0.6 ^ 2)
+  #   = 0.10 * 1200 * 0.36
+  #   = 43 points off.  Score 57 — "probably still damp, bring a towel".
+  #
+  #   That same rain 5 hours ago:
+  #   = 0.10 * 1200 * (0.6 ^ 5) = 9 points off. Score 91 — basically fine.
+  #
+  # TUNING: if the app keeps telling you courts are dry when they're still
+  # puddled, LOWER `drying_rate` (0.6 -> 0.75 means slower drying, longer
+  # penalty). If it's too pessimistic, raise it toward 0.5.
+  wet_courts:
+    lookback_hours: 8        # how far back to look for rain
+    penalty_per_inch: 1200   # points off per inch of rain, before decay
+    drying_rate: 0.6         # each hour that passes multiplies penalty by this
+    max_penalty: 100         # never subtract more than this from one rule
+
+    # If it is actively raining THIS hour at or above this much, veto outright.
+    # 0.01 in/hr is about the lightest rain you'd actually notice.
+    raining_now_veto_inches: 0.01
+
+    # Surfaces dry at different rates. This multiplies the wet penalty.
+    # Hard courts shed water fastest; clay holds it and is the one surface
+    # where you genuinely shouldn't play on it wet (it damages the court).
+    surface_multiplier:
+      hard: 1.0
+      clay: 1.6
+      other: 1.2
+
+  # --------------------------------------------------------------------------
+  # RULE 2: TEMPERATURE BANDS
+  # --------------------------------------------------------------------------
+  # Read as: from `min_f` up to (not including) `max_f`, subtract `penalty`.
+  # Bands must cover the whole range; the first matching band wins.
+  #
+  # These are tuned for Reno specifically — high desert, very dry, big daily
+  # temperature swings. 90F here is far more playable than 90F in Florida
+  # because the humidity is so low, so the hot-end penalties are gentler than
+  # you'd set them elsewhere.
+  temperature_bands:
+    - {min_f: -100, max_f: 32,  penalty: 100, label: "below freezing"}
+    - {min_f: 32,   max_f: 40,  penalty: 45,  label: "near freezing"}
+    - {min_f: 40,   max_f: 50,  penalty: 20,  label: "cold"}
+    - {min_f: 50,   max_f: 58,  penalty: 6,   label: "chilly but fine"}
+    - {min_f: 58,   max_f: 85,  penalty: 0,   label: "ideal"}
+    - {min_f: 85,   max_f: 93,  penalty: 8,   label: "warm"}
+    - {min_f: 93,   max_f: 100, penalty: 28,  label: "hot"}
+    - {min_f: 100,  max_f: 200, penalty: 55,  label: "dangerously hot"}
+
+  # --------------------------------------------------------------------------
+  # RULE 3: WIND
+  # --------------------------------------------------------------------------
+  # Wind is the underrated court-killer in Reno — afternoon gusts off the
+  # Sierra can make a ball toss impossible even on a warm, sunny day. Same
+  # band format as temperature.
+  wind_bands:
+    - {min_mph: 0,  max_mph: 8,   penalty: 0,  label: "calm"}
+    - {min_mph: 8,  max_mph: 14,  penalty: 7,  label: "breezy"}
+    - {min_mph: 14, max_mph: 20,  penalty: 20, label: "windy"}
+    - {min_mph: 20, max_mph: 28,  penalty: 42, label: "very windy"}
+    - {min_mph: 28, max_mph: 200, penalty: 70, label: "unplayable wind"}
+
+  # --------------------------------------------------------------------------
+  # RULE 4: DAYLIGHT AND LIGHTS
+  # --------------------------------------------------------------------------
+  # Sunrise and sunset are computed locally from the court's latitude and
+  # longitude (see daylight.py) — no API call, because the math is exact and
+  # free. It also means the app still works on a phone with bad signal if the
+  # weather is already cached.
+  daylight:
+    # You can see well enough to play a bit before sunrise and after sunset.
+    # These minutes extend the usable window at each end (civil twilight).
+    minutes_before_sunrise: 15
+    minutes_after_sunset: 25
+
+    # Playing under lights works perfectly well, with the caveat that depth
+    # perception suffers and the ball picks up glare. Hence a small penalty.
+    lights_penalty: 6
+
+    # If it's dark and the court has no lights, that's a physical veto.
+    # If it's dark, has lights, but it's past the court's `lights_out` hour
+    # in courts.yaml, that's also a veto.
+
+  # --------------------------------------------------------------------------
+  # RULE 5: FREEZE / ICE
+  # --------------------------------------------------------------------------
+  # The dangerous Reno case: it rained or snowed, then the temperature dropped
+  # overnight. The court looks fine and is a sheet of ice. Catching this needs
+  # the COMBINATION of cold and recent wet, since each one alone reads as
+  # merely uncomfortable. It is exactly the kind of rule that's easy to write
+  # here and nearly impossible to explain once a black-box model has learned it.
+  freeze:
+    ice_risk_temp_f: 36        # at or below this...
+    ice_lookback_hours: 14     # ...and any measurable precip in this window...
+    ice_precip_inches: 0.01    # ...of at least this much = veto (ice risk)
+
+  # --------------------------------------------------------------------------
+  # SCORE LABELS
+  # --------------------------------------------------------------------------
+  # What a number means in words. `min_score` is inclusive, checked top down.
+  # Colours are chosen to stay legible on a dark background.
+  labels:
+    - {min_score: 80, label: "Good",      color: "#3fb950"}
+    - {min_score: 60, label: "Playable",  color: "#57ab5a"}
+    - {min_score: 40, label: "Marginal",  color: "#d29922"}
+    - {min_score: 20, label: "Poor",      color: "#db6d28"}
+    - {min_score: 0,  label: "Unplayable", color: "#f85149"}
+
+  # The cutoff used when counting "playable hours" in the historical view.
+  # 50 means "Playable or better". Raise it to 60 if you only want to count
+  # hours you'd actually have enjoyed.
+  playable_threshold: 50
+
+
+# ============================================================================
+# CROWDING — a completely separate model from playability.
+# ============================================================================
+# DESIGN CHOICE: crowding is kept separate from playability on purpose, and
+# the two are never mixed into one number.
+#
+# Why? Because they answer different questions and you might want opposite
+# things from them. A freezing windy Tuesday morning scores terribly on
+# playability but the courts are guaranteed empty. A perfect Saturday at 10am
+# scores 100 on playability and you will not get a court. Blending those into
+# a single score would destroy the information you actually need. So the
+# dashboard shows both, and lets you decide which you care about today.
+#
+# Output is 0-100 where HIGHER MEANS MORE CROWDED.
+# ============================================================================
+crowding:
+  # Baseline occupancy when no busy-hours block applies — the "someone might
+  # be here" floor.
+  base_level: 0.12
+
+  # Multipliers by day of week. Friday evenings drop off because people have
+  # other plans; Saturday is the peak.
+  day_multiplier:
+    mon: 1.0
+    tue: 1.05
+    wed: 1.05
+    thu: 1.0
+    fri: 0.85
+    sat: 1.25
+    sun: 1.15
+
+  # Seasonal multiplier by month (1 = January). Reno's tennis season is
+  # sharply seasonal: nobody is out in January, and July evenings are packed.
+  # These are the numbers most worth correcting from your own experience.
+  month_multiplier:
+    1: 0.35
+    2: 0.45
+    3: 0.70
+    4: 0.95
+    5: 1.15
+    6: 1.25
+    7: 1.25
+    8: 1.20
+    9: 1.10
+    10: 0.85
+    11: 0.50
+    12: 0.35
+
+  # Nice weather pulls people outside. This links the two models in ONE
+  # direction only: playability feeds into crowding, and the arrow stops there.
+  # At playability 100 the crowd is multiplied by `at_perfect_weather`;
+  # at playability 0 by `at_terrible_weather`; in between it interpolates.
+  weather_response:
+    enabled: true
+    at_perfect_weather: 1.15
+    at_terrible_weather: 0.15
+
+  # Words for the final 0-100 crowding number.
+  labels:
+    - {min_score: 75, label: "Packed"}
+    - {min_score: 50, label: "Busy"}
+    - {min_score: 25, label: "Some players"}
+    - {min_score: 0,  label: "Likely empty"}
+
+
+# ============================================================================
+# DATA FETCHING
+# ============================================================================
+data:
+  # How many days of forecast to pull. Open-Meteo gives up to 16; 7 is what
+  # the dashboard shows and keeps responses small.
+  forecast_days: 7
+
+  # How many years of history to pull for the "playable hours per month" view.
+  # More years = a better sense of a typical Reno March, but a slower first
+  # run. 3 years is roughly a 10-second first fetch per court, then cached.
+  history_years: 3
+
+  # Cache lifetimes in seconds. See cache.py for why these two differ so much.
+  forecast_cache_seconds: 1800      # 30 min — forecasts update a few times a day
+  archive_cache_seconds: 2592000    # 30 days — the past does not change
