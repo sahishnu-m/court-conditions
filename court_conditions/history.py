@@ -1,5 +1,5 @@
 """
-history.py — "how many playable hours does a typical Reno March have?"
+history.py: "how many playable hours does a typical Reno March have?"
 
 WHAT THIS ANSWERS
 The forecast tells you about this week. This tells you about the season. If
@@ -15,13 +15,13 @@ forecast uses, and count how many cleared the playable threshold.
 DESIGN CHOICE: reusing the live scoring rules on historical data, rather than
 writing a separate simpler "was it nice" check, is what makes this view
 trustworthy. It means the history and the forecast can never disagree about
-what "playable" means — and when you tune a weight in scoring.yaml, the
+what "playable" means, and when you tune a weight in scoring.yaml, the
 historical chart updates to match. You can literally watch your tuning change
 the past, which is a good sanity check on whether a weight is sensible.
 
 A NOTE ON COST
 Three years of hourly data is about 26,000 rows per court, and each row runs
-five rules. That's the slowest thing this app does — a few seconds per court.
+five rules. That's the slowest thing this app does, a few seconds per court.
 It's cached for 30 days (see cache.py), so you pay it once.
 """
 
@@ -36,7 +36,7 @@ from .daylight import playable_light_window
 from .scoring import playable_threshold, score_series
 from .weather import fetch_history_years
 
-MONTH_NAMES = list(calendar.month_abbr)  # ['', 'Jan', 'Feb', ...] — index 1-12
+MONTH_NAMES = list(calendar.month_abbr)  # ['', 'Jan', 'Feb', ...], index 1-12
 
 # Reno's tennis seasons, grouped for the seasonal rollup. Meteorological
 # seasons (Dec-Feb winter) rather than astronomical ones, because they line up
@@ -72,7 +72,7 @@ def monthly_playable_hours(court: Court, years: int | None = None) -> pd.DataFra
 
     `playable_pct` is measured against LIT hours. Dividing by all 24 would
     make every winter month look terrible for a reason that has nothing to do
-    with weather — December's problem is darkness. Comparing against the hours
+    with weather, December's problem is darkness. Comparing against the hours
     you could possibly have played separates "the weather was bad" from "there
     was no light", which are different problems with different solutions (one
     needs an indoor court, the other needs lights).
@@ -127,7 +127,7 @@ def monthly_playable_hours(court: Court, years: int | None = None) -> pd.DataFra
 
     grouped["month_name"] = grouped["month"].map(lambda m: MONTH_NAMES[m])
     grouped["season"] = grouped["month"].map(season_of)
-    # Guard against dividing by zero — possible in theory near the poles,
+    # Guard against dividing by zero, possible in theory near the poles,
     # never in Reno, but a crash in a chart is worse than a zero.
     grouped["playable_pct"] = (
         grouped["playable_hours"] / grouped["lit_hours"].replace(0, pd.NA) * 100
@@ -144,7 +144,7 @@ def monthly_averages(monthly: pd.DataFrame) -> pd.DataFrame:
     This is the "what is a typical March here" view. Averaging across years
     smooths out the fact that one particular March happened to be a washout.
     `years_counted` is carried through so the chart can be honest about how
-    much data each average rests on — an average of two years is a weaker
+    much data each average rests on, an average of two years is a weaker
     claim than an average of five.
     """
     if monthly.empty:

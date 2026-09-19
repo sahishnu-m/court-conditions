@@ -1,5 +1,5 @@
 """
-recommend.py — turns scores into answers. "When should I actually go?"
+recommend.py: turns scores into answers. "When should I actually go?"
 
 scoring.py tells you how good every hour is. This file answers the questions
 you'd actually ask standing at the courts with your phone out:
@@ -44,7 +44,7 @@ class Slot:
         The ranking number used to sort options. NEVER displayed.
 
         Weighted 70/30 toward playability. The reasoning: bad weather makes
-        tennis impossible, while a crowd makes it merely inconvenient — you
+        tennis impossible, while a crowd makes it merely inconvenient, you
         can wait twenty minutes for a court, but you can't wait out a
         thunderstorm. So playability dominates, with crowding as a tiebreaker
         that separates two otherwise-equally-nice hours.
@@ -84,7 +84,7 @@ def right_now(court: Court, weather: pd.DataFrame, now: dt.datetime) -> Slot:
     The headline answer: can I play at this court right now?
 
     `now` is rounded down to the hour because the weather data is hourly.
-    2:47pm is scored using the 2:00pm row — the closest thing we have.
+    2:47pm is scored using the 2:00pm row, the closest thing we have.
     """
     current_hour = now.replace(minute=0, second=0, microsecond=0)
     return build_slot(court, current_hour, weather)
@@ -99,7 +99,7 @@ def best_today(
     """
     The best remaining hours today, best first.
 
-    Only looks FORWARD from the current hour — telling you that 9am was great
+    Only looks FORWARD from the current hour, telling you that 9am was great
     when it's 4pm is not useful. Returns an empty list when nothing today
     clears `min_score`, which is itself a useful answer ("don't bother today").
     """
@@ -128,7 +128,7 @@ def best_this_week(
     DESIGN CHOICE: one result per day rather than a flat "top 10 hours".
 
     A flat top-10 would almost always return ten consecutive hours from
-    whichever day happens to be nicest — 10am, 11am, 12pm, 1pm... on Saturday.
+    whichever day happens to be nicest, 10am, 11am, 12pm, 1pm... on Saturday.
     That's technically correct and practically useless; you can only play once.
     Grouping by day gives you a genuine menu of options to plan around.
     """

@@ -1,17 +1,17 @@
 # ============================================================================
-# scoring.yaml — every tunable number in the model lives here.
+# scoring.yaml: every tunable number in the model lives here.
 #
 # DESIGN CHOICE: this project deliberately does NOT use machine learning.
 #
-# Why? A trained model would need labeled data — thousands of hours tagged
-# "I could play" / "I couldn't" — and that data has never been collected.
+# Why? A trained model would need labeled data, thousands of hours tagged
+# "I could play" / "I couldn't", and that data has never been collected.
 # Worse, a neural net reporting "score 43" leaves you with no way to explain
 # the number, and no way to correct it when it turns out to be wrong about,
 # say, how fast a Reno hard court dries.
 #
 # So this is a RULE-BASED SCORING MODEL. Every point added or subtracted
 # comes from a named rule with a number you can see and change in this file.
-# When the app says "62 — wet from rain 3h ago, and windy", you can trace each
+# When the app says "62, wet from rain 3h ago, and windy", you can trace each
 # of those words to a line below. You know these courts better than any
 # dataset does, so the model is built to absorb your judgement.
 #
@@ -25,7 +25,7 @@ playability:
   # The final score is clamped to the 0-100 range.
   starting_score: 100
 
-  # A "veto" rule doesn't subtract points — it forces the score straight to 0.
+  # A "veto" rule forces the score straight to 0 rather than subtracting points.
   # Vetoes are for physical impossibility (it's dark, it's raining right now,
   # the court is iced over), not for "unpleasant". Unpleasant is a penalty.
 
@@ -34,7 +34,7 @@ playability:
   # --------------------------------------------------------------------------
   # The single biggest thing this app is for. A hard court is unplayable while
   # wet and stays unplayable for a while after the rain stops. So we can't just
-  # ask "is it raining now" — we have to look BACKWARD in time.
+  # ask "is it raining now", we have to look BACKWARD in time.
   #
   # How the math works:
   #   For each hour in the lookback window, we take that hour's rainfall and
@@ -48,10 +48,10 @@ playability:
   #   0.10 inches of rain 2 hours ago
   #   = 0.10 * 1200 * (0.6 ^ 2)
   #   = 0.10 * 1200 * 0.36
-  #   = 43 points off.  Score 57 — "probably still damp, bring a towel".
+  #   = 43 points off.  Score 57, "probably still damp, bring a towel".
   #
   #   That same rain 5 hours ago:
-  #   = 0.10 * 1200 * (0.6 ^ 5) = 9 points off. Score 91 — basically fine.
+  #   = 0.10 * 1200 * (0.6 ^ 5) = 9 points off. Score 91, basically fine.
   #
   # TUNING: if the app keeps telling you courts are dry when they're still
   # puddled, LOWER `drying_rate` (0.6 -> 0.75 means slower drying, longer
@@ -80,7 +80,7 @@ playability:
   # Read as: from `min_f` up to (not including) `max_f`, subtract `penalty`.
   # Bands must cover the whole range; the first matching band wins.
   #
-  # These are tuned for Reno specifically — high desert, very dry, big daily
+  # These are tuned for Reno specifically, high desert, very dry, big daily
   # temperature swings. 90F here is far more playable than 90F in Florida
   # because the humidity is so low, so the hot-end penalties are gentler than
   # you'd set them elsewhere.
@@ -97,7 +97,7 @@ playability:
   # --------------------------------------------------------------------------
   # RULE 3: WIND
   # --------------------------------------------------------------------------
-  # Wind is the underrated court-killer in Reno — afternoon gusts off the
+  # Wind is the underrated court-killer in Reno, afternoon gusts off the
   # Sierra can make a ball toss impossible even on a warm, sunny day. Same
   # band format as temperature.
   wind_bands:
@@ -111,7 +111,7 @@ playability:
   # RULE 4: DAYLIGHT AND LIGHTS
   # --------------------------------------------------------------------------
   # Sunrise and sunset are computed locally from the court's latitude and
-  # longitude (see daylight.py) — no API call, because the math is exact and
+  # longitude (see daylight.py), no API call, because the math is exact and
   # free. It also means the app still works on a phone with bad signal if the
   # weather is already cached.
   daylight:
@@ -160,7 +160,7 @@ playability:
 
 
 # ============================================================================
-# CROWDING — a completely separate model from playability.
+# CROWDING, a completely separate model from playability.
 # ============================================================================
 # DESIGN CHOICE: crowding is kept separate from playability on purpose, and
 # the two are never mixed into one number.
@@ -175,7 +175,7 @@ playability:
 # Output is 0-100 where HIGHER MEANS MORE CROWDED.
 # ============================================================================
 crowding:
-  # Baseline occupancy when no busy-hours block applies — the "someone might
+  # Baseline occupancy when no busy-hours block applies, the "someone might
   # be here" floor.
   base_level: 0.12
 
@@ -238,5 +238,5 @@ data:
   history_years: 3
 
   # Cache lifetimes in seconds. See cache.py for why these two differ so much.
-  forecast_cache_seconds: 1800      # 30 min — forecasts update a few times a day
-  archive_cache_seconds: 2592000    # 30 days — the past does not change
+  forecast_cache_seconds: 1800      # 30 min, forecasts update a few times a day
+  archive_cache_seconds: 2592000    # 30 days, the past does not change

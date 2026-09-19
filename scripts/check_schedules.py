@@ -13,7 +13,7 @@ Read the header of court_conditions/scrape.py for the full set of rules this
 follows (robots.txt is binding, 3 seconds between requests, nothing behind a
 login, every skip logged).
 
-Expect this to be slow — that's the rate limit working as intended.
+Expect this to be slow, that's the rate limit working as intended.
 """
 
 from __future__ import annotations

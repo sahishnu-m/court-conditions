@@ -1,5 +1,5 @@
 """
-scoring.py — the playability model. "Can I physically play here right now?"
+scoring.py: the playability model. "Can I physically play here right now?"
 
 THE CORE DESIGN IDEA
 Start at 100 points. Each rule looks at the weather and either subtracts
@@ -10,7 +10,7 @@ complete list of reasons behind it.
 That last part is the whole point. Compare two possible designs:
 
     BAD:   score = model.predict(weather)   ->  "43"
-    THIS:  score = playability(...)         ->  "43 — wet from 0.08in of rain
+    THIS:  score = playability(...)         ->  "43, wet from 0.08in of rain
                                                  2h ago (-31), windy at 17mph
                                                  (-20), chilly at 54F (-6)"
 
@@ -19,7 +19,7 @@ dry, you know to raise `drying_rate` in scoring.yaml. A black-box model gives
 you nothing to grab onto. For a project you have to explain and defend, an
 interpretable model is the stronger choice.
 
-VETO vs PENALTY — an important distinction
+VETO vs PENALTY, an important distinction
   * A PENALTY says "this is worse". It subtracts points and stacks with other
     penalties. Cold + windy is worse than either alone.
   * A VETO says "this is impossible". It sets the score to 0 regardless of
@@ -76,7 +76,7 @@ class Playability:
         """
         The single most important sentence explaining this score.
 
-        A veto always wins — "it's dark" matters more than "slightly breezy".
+        A veto always wins, "it's dark" matters more than "slightly breezy".
         Otherwise the biggest penalty is the most useful thing to say. If
         nothing was deducted at all, the conditions are simply good.
         """
@@ -89,7 +89,7 @@ class Playability:
 
     @property
     def full_reason(self) -> str:
-        """Every reason, joined — used in tooltips and the detail panel."""
+        """Every reason, joined, used in tooltips and the detail panel."""
         if not self.deductions:
             return "No deductions: conditions are ideal."
         return "; ".join(
@@ -106,17 +106,17 @@ class Playability:
 #
 # The obvious way to write that is, for each hour, filter the weather frame
 # down to the preceding few hours and add them up. That's what this code did
-# at first — and scoring 2 years of history took nearly four minutes. The
+# at first, and scoring 2 years of history took nearly four minutes. The
 # reason is that filtering a frame is O(n): doing it once per row makes the
 # whole thing O(n²). At 26,000 hours that's ~680 million row comparisons.
 #
 # The fix is to compute all the backward-looking numbers ONCE for the whole
 # frame using vectorized pandas operations, as extra columns. Then scoring an
-# hour is just reading values off its own row — no scanning at all. Same
+# hour is just reading values off its own row, no scanning at all. Same
 # arithmetic, same results, but seconds instead of minutes.
 #
 # `prepare()` adds those columns. Both score_hour and score_series call it, so
-# there is still only ONE implementation of each rule — the rules just read a
+# there is still only ONE implementation of each rule, the rules just read a
 # column instead of recomputing a sum.
 # ---------------------------------------------------------------------------
 
@@ -127,7 +127,7 @@ def prepare(history: pd.DataFrame) -> pd.DataFrame:
     """
     Add the precomputed backward-looking columns to an hourly weather frame.
 
-    Assumes rows are hourly and contiguous — which is what Open-Meteo returns.
+    Assumes rows are hourly and contiguous, which is what Open-Meteo returns.
     We sort defensively because `.shift()` relies on row order: shifting by 1
     means "one row back", and that only equals "one hour back" if the rows are
     in time order with no gaps.
@@ -165,7 +165,7 @@ def prepare(history: pd.DataFrame) -> pd.DataFrame:
     frame["rain_total_in"] = precip.rolling(lookback, min_periods=1).sum()
 
     # How many hours since it last rained. Trick: take each row's position,
-    # blank it out on dry hours, then forward-fill — every row now carries the
+    # blank it out on dry hours, then forward-fill, every row now carries the
     # position of the most recent wet hour, and the difference is the gap.
     positions = pd.Series(range(len(frame)), index=frame.index, dtype="float64")
     frame["rain_hours_ago"] = positions - positions.where(precip > 0).ffill()
@@ -189,7 +189,7 @@ def _band_lookup(bands: list[dict], value: float, key_min: str, key_max: str):
     Find the first band whose [min, max) range contains `value`.
 
     Shared by the temperature and wind rules since both use the same band
-    format in scoring.yaml — just with different key names.
+    format in scoring.yaml, just with different key names.
     """
     for band in bands:
         if band[key_min] <= value < band[key_max]:
@@ -202,7 +202,7 @@ def _wet_penalty(settings: dict, court: Court, row: pd.Series) -> Deduction | No
     RULE 1: how wet is this court from recent rain?
 
     Reads the decayed rain total that `prepare()` already computed for this
-    row. The decay model is explained in detail in scoring.yaml — the short
+    row. The decay model is explained in detail in scoring.yaml, the short
     version is that rain's penalty shrinks geometrically with every hour that
     passes, because the court is drying.
     """
@@ -243,7 +243,7 @@ def _wet_penalty(settings: dict, court: Court, row: pd.Series) -> Deduction | No
     return Deduction(
         rule="wet_courts",
         points=penalty,
-        reason=f"courts likely damp — {total_inches:.2f}in of rain, last {timing}",
+        reason=f"courts likely damp, {total_inches:.2f}in of rain, last {timing}",
     )
 
 
@@ -274,8 +274,8 @@ def _wind_penalty(settings: dict, wind_mph: float, gust_mph: float) -> Deduction
 
     DESIGN CHOICE: we score the average of sustained wind and gusts, leaning
     toward gusts, rather than sustained wind alone. A steady 12mph is annoying
-    but playable; 12mph sustained with 30mph gusts is genuinely not tennis —
-    the gust is what ruins the ball toss. Sustained speed alone would rate
+    but playable; 12mph sustained with 30mph gusts is genuinely not tennis, the
+    gust is what ruins the ball toss. Sustained speed alone would rate
     those two identically, which is wrong. The 60/40 weighting toward gusts is
     a judgement call and a reasonable thing to tune.
     """
@@ -332,7 +332,7 @@ def _light_deduction(
 
 def _freeze_veto(settings: dict, row: pd.Series, temp_f: float) -> Deduction | None:
     """
-    RULE 5: ice risk — the combination rule.
+    RULE 5: ice risk, the combination rule.
 
     Cold alone is a penalty. Wet alone is a penalty. But cold AND recently wet
     means the court may be iced, which makes it a safety issue.
@@ -356,7 +356,7 @@ def _freeze_veto(settings: dict, row: pd.Series, temp_f: float) -> Deduction | N
         rule="freeze",
         points=100,
         reason=(
-            f"ice risk — {temp_f:.0f}F with {recent_precip:.2f}in of "
+            f"ice risk, {temp_f:.0f}F with {recent_precip:.2f}in of "
             f"precipitation in the last {lookback}h"
         ),
         is_veto=True,
@@ -376,7 +376,7 @@ def _score_row(court: Court, row: pd.Series, settings: dict) -> Playability:
     Score one already-prepared row of weather.
 
     Split out from score_hour so that score_series can loop over rows directly
-    without looking each one up by timestamp — that lookup is a full scan of
+    without looking each one up by timestamp, that lookup is a full scan of
     the frame, and doing it per row is the other half of the O(n²) problem
     described above `prepare()`.
     """
@@ -386,8 +386,8 @@ def _score_row(court: Court, row: pd.Series, settings: dict) -> Playability:
     gust_mph = float(row["wind_gust_mph"])
     precip_in = float(row["precip_in"])
 
-    # Run every rule. Order here doesn't affect the result — penalties sum and
-    # any veto zeroes the score — but it does set the order reasons appear in.
+    # Run every rule. Order here doesn't affect the result, penalties sum and
+    # any veto zeroes the score, but it does set the order reasons appear in.
     light_deduction, situation = _light_deduction(settings, court, when)
     candidate_rules = [
         _wet_penalty(settings, court, row),
@@ -433,8 +433,8 @@ def score_hour(
     Args:
         court:   which court (its surface and lights matter)
         when:    the hour to score, timezone-aware, minutes zeroed
-        history: hourly weather covering `when` AND the hours before it —
-                 the backward-looking rules need that runway
+        history: hourly weather covering `when` AND the hours before it, the
+        backward-looking rules need that runway
 
     Returns a Playability carrying the score and every reason behind it.
     """
@@ -464,7 +464,7 @@ def score_series(court: Court, history: pd.DataFrame) -> pd.DataFrame:
 
     DESIGN CHOICE: the first few hours of the frame get lower-confidence
     scores, because the wet-courts rule can only look back as far as the data
-    goes. We don't drop them — the caller decides what to show — but this is
+    goes. We don't drop them, the caller decides what to show, but this is
     why weather.py always requests `past_days=2` alongside the forecast.
     """
     prepared = _ensure_prepared(history)

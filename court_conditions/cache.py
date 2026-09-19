@@ -1,11 +1,11 @@
 """
-cache.py — stops the app from re-asking Open-Meteo for data it already has.
+cache.py: stops the app from re-asking Open-Meteo for data it already has.
 
 WHY THIS FILE EXISTS
 Streamlit re-runs your entire script from the top every time you click
 anything. Without caching, picking a different court from a dropdown would
 fire a fresh HTTP request for every court on screen. Open-Meteo is free and
-generous, and in return they ask for reasonable use — hammering a free public
+generous, and in return they ask for reasonable use, hammering a free public
 API that a lot of people depend on is bad manners. Caching is the polite thing
 to do, and it also makes the dashboard feel instant.
 
@@ -14,13 +14,13 @@ HOW IT WORKS
 exactly like `requests.get(...)`, but the first call saves the response into a
 small SQLite file on disk and later identical calls read from that file
 instead of the network. Because it's on disk (not in memory), the cache also
-survives restarting the app — so quitting and relaunching doesn't re-download
+survives restarting the app, so quitting and relaunching doesn't re-download
 three years of weather.
 
 TWO CACHES, TWO VERY DIFFERENT LIFETIMES
 This is the main design decision in this file:
 
-  * The FORECAST is a prediction about the future. It genuinely changes — the
+  * The FORECAST is a prediction about the future. It genuinely changes, the
     weather service updates it several times a day. Cached for 30 minutes.
 
   * The ARCHIVE is what the weather actually was, years ago. It will never
@@ -39,8 +39,8 @@ import requests_cache
 
 from .config import PROJECT_ROOT, load_settings
 
-# Cache files live in data/, which .gitignore excludes. They are derived data —
-# anyone who clones the repo can regenerate them by running the app, so there
+# Cache files live in data/, which .gitignore excludes. They are derived data,
+# # anyone who clones the repo can regenerate them by running the app, so there
 # is no reason to commit megabytes of weather to git.
 CACHE_DIR = PROJECT_ROOT / "data"
 
@@ -62,7 +62,7 @@ def _make_session(name: str, expire_after: int) -> requests_cache.CachedSession:
     )
 
 
-# These are module-level singletons — created once when the module is first
+# These are module-level singletons, created once when the module is first
 # imported, then reused. Two sessions would otherwise mean two SQLite
 # connections fighting over the same file.
 _forecast_session: requests_cache.CachedSession | None = None
@@ -70,7 +70,7 @@ _archive_session: requests_cache.CachedSession | None = None
 
 
 def forecast_session() -> requests_cache.CachedSession:
-    """Session for the 7-day forecast (short cache — forecasts change)."""
+    """Session for the 7-day forecast (short cache, forecasts change)."""
     global _forecast_session
     if _forecast_session is None:
         seconds = load_settings().get("data", {}).get("forecast_cache_seconds", 1800)
@@ -79,7 +79,7 @@ def forecast_session() -> requests_cache.CachedSession:
 
 
 def archive_session() -> requests_cache.CachedSession:
-    """Session for historical weather (long cache — the past is fixed)."""
+    """Session for historical weather (long cache, the past is fixed)."""
     global _archive_session
     if _archive_session is None:
         seconds = load_settings().get("data", {}).get("archive_cache_seconds", 2592000)

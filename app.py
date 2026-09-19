@@ -221,7 +221,7 @@ c2.metric("Wind", f"{play.wind_mph:.0f} mph",
 c3.metric("Courts likely free", f"{crowd.expected_free_courts:.0f} of {court.num_courts}",
           help=f"Crowding estimate: {crowd.label}.")
 
-st.caption(f"Crowding: **{crowd.label}** — {crowd.reason}.")
+st.caption(f"Crowding: **{crowd.label}**, {crowd.reason}.")
 
 # When this court is a write-off, point somewhere else rather than dead-ending.
 if play.score < threshold:
@@ -250,8 +250,8 @@ with st.expander("Why this score"):
     if play.deductions:
         st.caption("Every hour starts at 100 points. These rules took points off:")
         kv_rows([
-            (d.rule, f"blocked — {d.reason}" if d.is_veto
-             else f"−{d.points:.0f} — {d.reason}")
+            (d.rule, f"blocked: {d.reason}" if d.is_veto
+             else f"−{d.points:.0f}: {d.reason}")
             for d in play.deductions
         ])
     else:
@@ -312,7 +312,7 @@ with tab_today:
     today_slots = recommend.best_today(court, forecast, now, min_score=threshold)
     if today_slots:
         best = today_slots[0]
-        st.success(f"**Best left today: {format_clock(best.when)}** — {best.summary}")
+        st.success(f"**Best left today: {format_clock(best.when)}**, {best.summary}")
         slot_table(today_slots[:6], lambda s: format_clock(s.when))
     else:
         st.info("Nothing left today clears the threshold.")
@@ -323,7 +323,7 @@ with tab_week:
     )
     if week_slots:
         overall = max(week_slots, key=lambda s: s.combined_rank)
-        st.success(f"**Best of the week: {overall.time_label}** — {overall.summary}")
+        st.success(f"**Best of the week: {overall.time_label}**, {overall.summary}")
         st.caption("The best hour on each of the next seven days.")
         slot_table(week_slots, lambda s: s.time_label)
     else:
@@ -469,8 +469,8 @@ if st.session_state.get("history_requested"):
         st.subheader("Is it the weather, or is it the dark?")
         st.markdown(
             "Counting raw hours mixes two different problems together. Measuring instead "
-            "against the hours that had **usable light** — daylight, plus floodlights "
-            "where a court has them — separates a month that was stormy from a month "
+            "against the hours that had **usable light** (daylight, plus floodlights "
+            "where a court has them) separates a month that was stormy from a month "
             "that was simply short. One calls for an indoor court, the other for lights."
         )
         line = (
@@ -552,12 +552,20 @@ recorded per court, nudged by how good the weather is.
 Every weight lives in `config/scoring.yaml` with a comment explaining it, so the model
 is tuned by editing that file rather than by changing any Python. The current cutoff for
 counting an hour as playable is **{threshold}/100**.
+
+**Every weight in this model is my own judgment call, not a validated measurement.**
+The drying rate, the point deductions, the wind and temperature bands: none of them
+have been checked against what courts were actually like at the time. Treat the score
+as an informed guess, not a measured fact.
 """
 )
 
 with st.expander("What this gets wrong"):
     st.markdown(
         """
+- **The scoring weights are unvalidated.** They encode my own judgment about what
+  matters and by how much, not measurements taken against real court conditions.
+  See *How I would validate this* below.
 - **Crowding rests on configured guesses.** It has no way to learn that a tournament
   booked every court this Saturday. Playability is a forecast; crowding is a reminder.
 - **The Reno Municipal Tennis Center takes reservations**, which makes its crowding
@@ -570,6 +578,19 @@ with st.expander("What this gets wrong"):
 - **Closures, resurfacing, missing nets and pickleball conversions** are all invisible here.
 - **Forecast quality falls off with distance.** Day seven deserves much less trust than
   tomorrow, and this app shows that uncertainty nowhere.
+        """
+    )
+
+with st.expander("How I would validate this"):
+    st.markdown(
+        """
+The honest test is logging actual playability against the score for about a month:
+for each hour someone actually plays or checks a court, record what conditions were
+really like and whether the court was really playable, then compare that log against
+what the model predicted for the same hour. Rules that miss consistently in one
+direction point at a weight worth changing in `config/scoring.yaml`. That log has
+not been kept yet, so the weights here remain a starting guess rather than a
+validated model.
         """
     )
 

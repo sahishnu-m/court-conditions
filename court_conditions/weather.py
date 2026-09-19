@@ -1,5 +1,5 @@
 """
-weather.py — everything that talks to Open-Meteo.
+weather.py: everything that talks to Open-Meteo.
 
 WHY OPEN-METEO
 It's free, needs no API key, and serves both forecast and multi-year history
@@ -9,15 +9,15 @@ rotated if leaked. Choosing a keyless API removes that entire problem, which
 is a real design consideration for a project you want to deploy publicly.
 
 TWO ENDPOINTS
-  api.open-meteo.com/v1/forecast          — now through +7 days
-  archive-api.open-meteo.com/v1/archive   — historical reanalysis data
+  api.open-meteo.com/v1/forecast, now through +7 days
+  archive-api.open-meteo.com/v1/archive, historical reanalysis data
 
 The archive endpoint lags real time by about 5 days, which is why the
 historical functions here never ask for the last week.
 
 UNITS
 We ask Open-Meteo for Fahrenheit, mph, and inches directly, using their
-unit parameters. The alternative — fetching metric and converting — would
+unit parameters. The alternative, fetching metric and converting, would
 mean conversion math scattered through the code and a permanent risk of a
 unit bug. Pushing the conversion to the API is free and eliminates that.
 
@@ -46,10 +46,10 @@ ARCHIVE_URL = "https://archive-api.open-meteo.com/v1/archive"
 
 # The hourly variables we need, in Open-Meteo's naming.
 HOURLY_VARIABLES = [
-    "temperature_2m",  # air temp at 2 metres — standard "how warm is it"
+    "temperature_2m",  # air temp at 2 metres, standard "how warm is it"
     "precipitation",  # rain + snow melt for that hour
     "wind_speed_10m",  # sustained wind at 10 metres
-    "wind_gusts_10m",  # peak gust — matters more than average for tennis
+    "wind_gusts_10m",  # peak gust, matters more than average for tennis
 ]
 
 # Renaming map from Open-Meteo's column names to ours. Doing this in one place
@@ -97,8 +97,8 @@ def _to_frame(payload: dict) -> pd.DataFrame:
     """
     Convert Open-Meteo's JSON into our standard DataFrame.
 
-    Open-Meteo returns parallel arrays — one list of timestamps and one list
-    per variable, all the same length — rather than a list of row objects.
+    Open-Meteo returns parallel arrays, one list of timestamps and one list
+    per variable, all the same length, rather than a list of row objects.
     That maps directly onto a DataFrame constructor.
     """
     hourly = payload.get("hourly")
@@ -110,11 +110,11 @@ def _to_frame(payload: dict) -> pd.DataFrame:
     # already in Reno local time (we asked for that), so we attach the
     # timezone with tz_localize. Using tz_convert would shift the clock times.
     #
-    # DAYLIGHT SAVING TIME — the two arguments below are load-bearing.
+    # DAYLIGHT SAVING TIME, the two arguments below are load-bearing.
     # Twice a year local time does something impossible:
     #
     #   "Fall back" (early November): 1:00am–1:59am happens TWICE. A bare
-    #   timestamp of 01:30 is AMBIGUOUS — pandas can't tell which one you mean
+    #   timestamp of 01:30 is AMBIGUOUS, pandas can't tell which one you mean
     #   and raises an error rather than guessing. `ambiguous=True` says "treat
     #   it as the first pass, the one still on daylight time".
     #
@@ -123,7 +123,7 @@ def _to_frame(payload: dict) -> pd.DataFrame:
     #   to 3:00am instead of erroring.
     #
     # This never comes up in a 7-day forecast, so it's invisible until you
-    # pull multiple years of history and hit a November — which is exactly
+    # pull multiple years of history and hit a November, which is exactly
     # how this bug was found. Either choice affects one hour a year at 1am,
     # when nobody is playing tennis, so what matters here is simply that the
     # app keeps running.
@@ -196,7 +196,7 @@ def fetch_history(
     Hourly historical weather for one court between two dates (inclusive).
 
     Used by history.py to count playable hours per month. This is the slow
-    call — three years of hourly data is ~26,000 rows — which is exactly why
+    call, three years of hourly data is ~26,000 rows, which is exactly why
     cache.py gives the archive a 30-day lifetime.
     """
     # Clamp the end date: asking past the archive's lag returns empty rows.
@@ -230,7 +230,7 @@ def current_conditions(forecast: pd.DataFrame, now: dt.datetime) -> pd.Series | 
     """
     Pick the row of the forecast matching the current hour.
 
-    Returns None rather than raising if the hour isn't present — a missing row
+    Returns None rather than raising if the hour isn't present, a missing row
     is a normal thing that can happen at a day boundary, and the dashboard can
     show 'no data for this hour' more gracefully than it can catch an error.
     """

@@ -1,5 +1,5 @@
 """
-crowding.py — the crowding model. "Will a court actually be free?"
+crowding.py: the crowding model. "Will a court actually be free?"
 
 This is a completely separate model from scoring.py, and that separation is
 deliberate. See the long comment in scoring.yaml under `crowding:` for the
@@ -9,7 +9,7 @@ one. Collapsing both into a single "should I go" number would throw away the
 tension that makes the question interesting.
 
 BE HONEST ABOUT WHAT THIS IS
-The playability model is grounded in measured data — real temperature, real
+The playability model is grounded in measured data, real temperature, real
 rainfall. The crowding model is grounded in your guesses, written down in
 courts.yaml. It is a structured way of encoding what you already know as a
 coach. It has no way to know that a tournament took over the Tennis Center
@@ -49,7 +49,7 @@ def _base_level(court: Court, when: dt.datetime) -> tuple[float, str]:
     Step 1: start from the busy-hours blocks you wrote in courts.yaml.
 
     If any block covers this weekday and hour, use its `level`. If several
-    overlap, the busiest one wins — overlapping blocks usually mean two
+    overlap, the busiest one wins, overlapping blocks usually mean two
     different things happen at once (a league AND lessons), which makes the
     place busier than either one alone would.
     """
@@ -83,7 +83,7 @@ def estimate(
         court:              which court (its busy_hours and num_courts matter)
         when:               the hour to estimate
         playability_score:  the 0-100 playability for the same hour. Optional,
-                            but passing it makes the estimate much better —
+                            but passing it makes the estimate much better,
                             nobody is at the courts during a hailstorm no
                             matter what the schedule says.
 
@@ -102,7 +102,7 @@ def estimate(
     day_factor = float(settings.get("day_multiplier", {}).get(weekday_name, 1.0))
     level *= day_factor
 
-    # Step 3: seasonal multiplier. This is the big one in Reno — a 5pm
+    # Step 3: seasonal multiplier. This is the big one in Reno, a 5pm
     # Wednesday in July and a 5pm Wednesday in January are wildly different
     # questions, and the busy_hours config alone can't express that because
     # it has no notion of the calendar.
@@ -115,7 +115,7 @@ def estimate(
     # `at_terrible_weather` multiplier, at 100 we use `at_perfect_weather`,
     # and in between we slide proportionally. The formula
     #     low + (high - low) * (score / 100)
-    # is worth recognising — it's the standard way to map one range onto
+    # is worth recognising, it's the standard way to map one range onto
     # another and shows up constantly once you start looking for it.
     weather_reason = ""
     weather_config = settings.get("weather_response", {})

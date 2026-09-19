@@ -1,5 +1,5 @@
 """
-config.py — loads courts.yaml and scoring.yaml into Python objects.
+config.py: loads courts.yaml and scoring.yaml into Python objects.
 
 DESIGN CHOICE: why dataclasses instead of just passing the raw dictionaries
 around?
@@ -8,7 +8,7 @@ If the rest of the app used raw dicts, a typo like `court["ligths"]` would
 blow up at runtime, deep inside the dashboard, with a confusing error. By
 converting the YAML into dataclasses here, a bad field name fails immediately
 at startup with a clear message, and your editor can autocomplete `court.lights`.
-This file is the ONLY place that knows what the YAML looks like — if you add a
+This file is the ONLY place that knows what the YAML looks like, if you add a
 field to courts.yaml, this is the one Python file you have to touch.
 """
 
@@ -39,7 +39,7 @@ class BusyBlock:
 
     days: tuple[str, ...]  # e.g. ("mon", "tue", "wed", "thu", "fri")
     start_hour: int  # inclusive, 24-hour clock
-    end_hour: int  # EXCLUSIVE — "17-20" means 17, 18, 19 but not 20
+    end_hour: int  # EXCLUSIVE, "17-20" means 17, 18, 19 but not 20
     level: float  # 0.0 to 1.0, how full it gets
     why: str = ""  # your note about where the number came from
 
@@ -156,7 +156,7 @@ def load_courts() -> tuple[Court, ...]:
         )
 
     if not courts:
-        raise ValueError("courts.yaml contained no courts — nothing to predict.")
+        raise ValueError("courts.yaml contained no courts, nothing to predict.")
 
     # Catch the copy-paste mistake of duplicating a court block without
     # changing its id, which would silently make one court shadow the other.
@@ -177,7 +177,7 @@ def load_settings() -> dict[str, Any]:
     becoming dataclasses. The scoring config is read in a handful of places
     that each want a different slice of it, and its shape changes every time
     you add a tuning knob. Freezing that shape into dataclasses would mean
-    editing Python every time you wanted a new number — exactly the friction
+    editing Python every time you wanted a new number, exactly the friction
     this project is trying to avoid.
     """
     return _load_yaml(CONFIG_DIR / "scoring.yaml")

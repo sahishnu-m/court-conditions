@@ -1,5 +1,5 @@
 """
-scrape.py — optionally check public parks pages for published court schedules.
+scrape.py: optionally check public parks pages for published court schedules.
 
 READ THIS SECTION BEFORE RUNNING ANYTHING HERE.
 
@@ -38,7 +38,7 @@ WHAT THIS ACTUALLY FINDS
 Honestly: probably not much that's structured. Most parks departments publish
 court availability as a PDF, inside a reservation system, or leave it offline
 entirely. This module is built to look, report clearly on what it found, and
-fail gracefully when the answer is "nothing usable" — the most likely outcome,
+fail gracefully when the answer is "nothing usable", the most likely outcome,
 and a perfectly fine one. The app works entirely without it; scraped data sits
 on top of your hand-written courts.yaml as an optional bonus layer.
 
@@ -83,17 +83,17 @@ OUTPUT_PATH = PROJECT_ROOT / "data" / "scrape_report.json"
 # read this. A 404 is logged like any other skip and the run carries on.
 CANDIDATE_SOURCES = [
     {
-        "name": "City of Reno — Tennis",
+        "name": "City of Reno, Tennis",
         "url": "https://www.reno.gov/government/departments/parks-recreation-community-services/athletics/tennis",
         "looking_for": "tennis programs, Reno Tennis Center hours, league info",
     },
     {
-        "name": "City of Reno — Parks & Facilities Directory",
+        "name": "City of Reno, Parks & Facilities Directory",
         "url": "https://www.reno.gov/government/departments/parks-recreation-community-services/parks-facilities-directory",
         "looking_for": "per-park amenity listings including court counts",
     },
     {
-        "name": "City of Sparks — Find a Park or Facility",
+        "name": "City of Sparks, Find a Park or Facility",
         "url": "https://www.cityofsparks.us/rec_home/parks___facilities/find_a_park_or_facility.php",
         "looking_for": "Sparks park amenities and court counts",
     },
@@ -125,7 +125,7 @@ class PoliteFetcher:
 
     DESIGN CHOICE: the rate limit and robots.txt check live INSIDE the fetch
     method, which takes them off the caller's plate entirely. Left as the
-    caller's job, some future version of this code would forget one — that's
+    caller's job, some future version of this code would forget one, that's
     how every badly-behaved scraper gets written. Making good behaviour the
     only available path is more reliable than remembering to be good.
     """
@@ -152,7 +152,7 @@ class PoliteFetcher:
         Fetch and parse a host's robots.txt, caching the result.
 
         Returns None if robots.txt could not be read at all. How we treat that
-        case is a real decision — see `allowed()`.
+        case is a real decision, see `allowed()`.
         """
         parts = urllib.parse.urlparse(url)
         host_key = f"{parts.scheme}://{parts.netloc}"
@@ -173,12 +173,18 @@ class PoliteFetcher:
                 self._robots[host_key] = parser
             elif response.status_code in (401, 403):
                 # A protected robots.txt means "you are not welcome here".
-                logger.warning("robots.txt at %s is protected — treating site as disallowed", robots_url)
+                logger.warning(
+                    "robots.txt at %s is protected, treating site as disallowed",
+                    robots_url,
+                )
                 self._robots[host_key] = None
             else:
                 # 404 means no robots.txt exists. By the standard, that means
                 # everything is permitted. We still rate-limit.
-                logger.info("No robots.txt at %s (HTTP %s) — nothing disallowed", robots_url, response.status_code)
+                logger.info(
+                    "No robots.txt at %s (HTTP %s), nothing disallowed",
+                    robots_url, response.status_code,
+                )
                 parser.parse([])  # empty ruleset = allow all
                 self._robots[host_key] = parser
         except requests.exceptions.RequestException as exc:
@@ -193,7 +199,7 @@ class PoliteFetcher:
 
         DESIGN CHOICE: if robots.txt can't be read, we refuse.
 
-        The permissive alternative — "couldn't check, so go ahead" — is what
+        The permissive alternative, "couldn't check, so go ahead", is what
         most scrapers do, and it gets the burden of proof backwards.
         Confirming permission is what grants it. Failing closed costs us a
         page we might have been allowed to fetch; failing open risks hammering
@@ -201,7 +207,7 @@ class PoliteFetcher:
         """
         parser = self._robots_for(url)
         if parser is None:
-            return False, "could not read robots.txt — failing closed (assuming not allowed)"
+            return False, "could not read robots.txt, failing closed (assuming not allowed)"
 
         if parser.can_fetch(USER_AGENT, url):
             return True, "allowed by robots.txt"
@@ -221,13 +227,13 @@ def check_sources(sources: list[dict] | None = None) -> list[SourceResult]:
     This deliberately stops short of parsing schedules into structured data.
     Every one of these sites has a different layout, and a parser written
     against today's HTML would silently break the next time a city redesigns
-    its website — silently producing wrong court hours is worse than producing
+    its website, silently producing wrong court hours is worse than producing
     none. So we verify the page is reachable and permitted, note whether it
     even mentions tennis, and leave the reading to you.
 
     If you find a source that publishes a genuinely structured schedule (an
     iCal feed, a JSON endpoint, a CSV), that's the point at which writing a
-    real parser becomes worthwhile — a stable format is safe to parse.
+    real parser becomes worthwhile, a stable format is safe to parse.
     """
     sources = sources or CANDIDATE_SOURCES
     fetcher = PoliteFetcher()
@@ -240,7 +246,7 @@ def check_sources(sources: list[dict] | None = None) -> list[SourceResult]:
 
         is_allowed, reason = fetcher.allowed(url)
         if not is_allowed:
-            logger.warning("SKIP %s — %s", name, reason)
+            logger.warning("SKIP %s, %s", name, reason)
             results.append(
                 SourceResult(
                     name=name, url=url, status="skipped", reason=reason, checked_at=now
@@ -251,7 +257,7 @@ def check_sources(sources: list[dict] | None = None) -> list[SourceResult]:
         try:
             response = fetcher.fetch(url)
         except requests.exceptions.RequestException as exc:
-            logger.error("ERROR %s — %s", name, exc)
+            logger.error("ERROR %s, %s", name, exc)
             results.append(
                 SourceResult(
                     name=name,
@@ -281,7 +287,7 @@ def check_sources(sources: list[dict] | None = None) -> list[SourceResult]:
             hint = ""
             if response.status_code in (403, 404, 406, 429):
                 hint = (
-                    " — this URL may work fine in a browser; a city site "
+                    ", this URL may work fine in a browser; a city site "
                     "refusing our identified bot is a signal to read it by "
                     "hand rather than to disguise the scraper"
                 )
@@ -306,7 +312,7 @@ def check_sources(sources: list[dict] | None = None) -> list[SourceResult]:
                 url=url,
                 status="fetched",
                 reason=(
-                    "page fetched; mentions tennis — worth reading by hand"
+                    "page fetched; mentions tennis, worth reading by hand"
                     if mentions_tennis
                     else "page fetched but no mention of tennis; probably not useful"
                 ),

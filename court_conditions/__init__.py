@@ -1,5 +1,5 @@
 """
-court_conditions — predicts whether Reno-area outdoor tennis courts are
+court_conditions, predicts whether Reno-area outdoor tennis courts are
 playable and free at a given day and hour.
 
 The package is split so each file answers one question:

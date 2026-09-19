@@ -121,6 +121,22 @@ The historical view runs the same rules over past weather, so tuning a weight
 moves the history along with the forecast. You can watch a change rewrite the
 past, which is a useful check on whether a weight makes sense.
 
+**Every weight is my own judgment call, not a validated measurement.** The
+drying rate, the point deductions, the wind and temperature bands: none of
+them have been checked against what courts were actually like at the time
+they were scored. They are informed guesses from playing tennis in Reno, not
+numbers fit to observed outcomes.
+
+### How I would validate this
+
+Log actual playability for about a month: for each hour someone plays or
+checks a court, record what conditions were really like and whether the
+court was actually playable, then compare that log against what the model
+predicted for the same hour. Rules that miss consistently in one direction
+point at a weight worth changing in `config/scoring.yaml`. This log has not
+been kept yet, so the weights above remain a starting guess rather than a
+validated model.
+
 ---
 
 ## Editing the courts
